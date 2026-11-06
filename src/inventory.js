@@ -8,12 +8,16 @@ export function applyMovement(currentMilli, movement) {
   if (!movement || !["receipt", "issue", "adjustment"].includes(movement.type)) {
     throw new TypeError("unsupported movement type");
   }
-  const delta = movement.type === "adjustment" ? movement.deltaMilli : movement.quantityMilli;
-  assertMilliQuantity(Math.abs(delta), "movement quantity", { allowZero: false });
-  if (movement.type === "adjustment" && !Number.isSafeInteger(delta)) {
-    throw new TypeError("adjustment delta must be a safe integer");
+  let signedDelta;
+  if (movement.type === "adjustment") {
+    if (!Number.isSafeInteger(movement.deltaMilli) || movement.deltaMilli === 0) {
+      throw new TypeError("adjustment delta must be a nonzero safe integer");
+    }
+    signedDelta = movement.deltaMilli;
+  } else {
+    assertMilliQuantity(movement.quantityMilli, "quantityMilli", { allowZero: false });
+    signedDelta = movement.type === "receipt" ? movement.quantityMilli : -movement.quantityMilli;
   }
-  const signedDelta = movement.type === "receipt" ? delta : movement.type === "issue" ? -delta : delta;
   const next = currentMilli + signedDelta;
   if (!Number.isSafeInteger(next) || next < 0) throw new RangeError("movement would make stock negative or overflow");
   return next;
