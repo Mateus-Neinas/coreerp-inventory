@@ -6,6 +6,10 @@ test("receipts and issues return new balances in milli-units", () => {
   assert.equal(applyMovement(1250, { type: "receipt", quantityMilli: 500 }), 1750);
   assert.equal(applyMovement(1750, { type: "issue", quantityMilli: 250 }), 1500);
 });
+test("rejects negative issue and receipt quantities", () => {
+  assert.throws(() => applyMovement(200, { type: "issue", quantityMilli: -50 }), /quantityMilli/);
+  assert.throws(() => applyMovement(200, { type: "receipt", quantityMilli: -50 }), /quantityMilli/);
+});
 test("an issue cannot make stock negative", () => {
   assert.throws(() => applyMovement(200, { type: "issue", quantityMilli: 201 }), /negative/);
 });
